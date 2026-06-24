@@ -1,1 +1,1 @@
-Git repository for my mod work Oxygen Not Included
+Git repository for my mod work on Oxygen Not Included

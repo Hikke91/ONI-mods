@@ -5,9 +5,54 @@ using HarmonyLib;
 using System.Linq;
 using UnityEngine;
 using Klei.AI;
+using KMod;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.PatchManager;
+using PeterHan.PLib.Options;
+using Newtonsoft.Json;
 
 namespace slow_research
 {
+	public sealed class SlowResearch : UserMod2
+	{
+		internal static Mod ThisMod {get; private set;}
+		public static SlowResearchOptions Options;
+
+		public override void OnLoad(Harmony harmony)
+		{
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
+			new PPatchManager(harmony).RegisterPatchClass(typeof(SlowResearch));
+			new POptions().RegisterOptions(this, typeof(SlowResearchOptions));
+			SlowResearch.Options = POptions.ReadSettings<SlowResearchOptions>() ?? new SlowResearchOptions();
+		}
+
+	}
+
+	[JsonObject]
+	public class SlowResearchOptions
+	{
+		[Option("Cost multiplier", "Multiplies the cost of all research by this much")]
+		[Limit(1,10)]
+		public float CostMultiplier {get; set;}
+		[Option("Lab bonus","Lab room bonus to research speed in percentage (vanilla value is 10%)")]
+		[Limit(0f,100f)]
+		public int LabModifier {get; set;}
+		[Option("Research speed multiplier","Additional multiplier to research speed")]
+		[Limit(0.001,1)]
+		public float ResearchSpeedMultiplier {get; set;}
+		[Option("Attribute bonus","Science attribute bonus to research speed per point in percentage")]
+		[Limit(0f,100f)]
+		public int AttributeBonus {get; set;}
+
+		public SlowResearchOptions(){
+			CostMultiplier=2f;
+			ResearchSpeedMultiplier=1f;
+			AttributeBonus=20;
+			LabModifier=40;
+		}
+	}
+
 	public class Patches
 	{
 		[HarmonyPatch(typeof(ResearchCenter))]
@@ -30,7 +75,8 @@ namespace slow_research
 		{
 			public static void Postfix(Database.AttributeConverters __instance)
 			{
-				__instance.ResearchSpeed.multiplier = 0.2f; //reduces research attribute bonus from +40% to +20% r.speed per point
+				float multiplier = 0.01f*SlowResearch.Options.AttributeBonus;
+				__instance.ResearchSpeed.multiplier = multiplier; //changes research attribute bonus to value specified in options
 			}
 		}
 

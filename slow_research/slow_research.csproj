@@ -2,9 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>net4.8</TargetFramework>
+    <!--TargetFramework>netstandard2.1</TargetFramework-->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
+    <!--<PackageReference Include="Lib.Harmony.Ref" Version="2.4.2"/>-->
+    <PackageReference Include="PLib" Version="4.22.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.40">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    
     <Reference Include="0Harmony">
       <HintPath>lib\0Harmony.dll</HintPath>
     </Reference>
@@ -20,6 +30,36 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>lib\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
+
+  <Target Name="ILRepacker" AfterTargets="Build">
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)/PLib.dll"/>
+      <InputAssemblies Include="$(TargetPath)"/>
+    </ItemGroup>
+
+    <ILRepack
+            AllowDuplicateResources="false"
+            DebugInfo="true"
+            Internalize="true"
+            InputAssemblies="@(InputAssemblies)"
+            OutputFile="$(TargetPath)"
+            Parallel="true"
+            TargetKind="SameAsPrimaryAssembly"
+            LibraryPath="$(ProjectDir)/lib/" />
+  </Target>
+
+  <Target Name="CopyDLLs" AfterTargets="Build">
+    <Message Text="Executing CopyDLLs task" Importance="High" />
+
+    <Copy
+      SourceFiles="$(TargetDir)\$(ProjectName).dll"
+      DestinationFolder="$(ProjectDir)\$(ProjectName)" />
+
+    <Message Text="Copied build files" Importance="High" />
+  </Target>
 
 </Project>
