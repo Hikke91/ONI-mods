@@ -62,7 +62,8 @@ namespace slow_research
 			public static void Postfix(ResearchCenter __instance, WorkerBase worker, ElementConverter ___elementConverter)
 			{
 				float speed = 0f + __instance.GetEfficiencyMultiplier(worker); //in original code, this is for some reason 2f+multiplier
-																			   //speed *= 0.7f; //lets reduce the research speed by a further 30% while we are at it
+				float multiplier = SlowResearch.Options.ResearchSpeedMultiplier;
+				speed *= multiplier; //additional multiplier on research speed, by default 1
 				if (Game.Instance.FastWorkersModeActive)
 					speed *= 2f;
 				___elementConverter.SetWorkSpeedMultiplier(speed);
@@ -75,8 +76,9 @@ namespace slow_research
 		{
 			public static void Postfix(Database.AttributeConverters __instance)
 			{
-				float multiplier = 0.01f*SlowResearch.Options.AttributeBonus;
+				float multiplier = 0.01f*SlowResearch.Options.AttributeBonus; //converting int percentage points to a float
 				__instance.ResearchSpeed.multiplier = multiplier; //changes research attribute bonus to value specified in options
+				//NOTE: changes made in mod settings do not take effect until game restarted
 			}
 		}
 
@@ -87,17 +89,20 @@ namespace slow_research
 			public static void Postfix()
 			{
 				Db db = Db.Get();
+				float multiplier = SlowResearch.Options.CostMultiplier;
 				db.Techs.resources.ForEach(delegate (Tech tech)
 				{
 					foreach (string key in tech.costsByResearchTypeID.Keys.ToList())
 					{
-						tech.costsByResearchTypeID[key] *= 2; //doubles the research point cost of all techs
+						tech.costsByResearchTypeID[key] *= multiplier; //multiplies the research point cost of all techs
+						//NOTE: changes made in mod settings do not take effect until game restarted
 					}
 				});
 				
+				float labmodifier = (float)SlowResearch.Options.LabModifier;
 				db.DuplicantStatusItems.LaboratoryWorkEfficiencyBonus.resolveStringCallback = (Func<string, object, string>)((str, data) =>
 				{
-					string str3 = string.Format((string)STRINGS.DUPLICANTS.STATUSITEMS.LABORATORYWORKEFFICIENCYBONUS.NO_BUILDING_WORK_ATTRIBUTE, (object)GameUtil.AddPositiveSign(GameUtil.GetFormattedPercent(40f), true)); //this only changes the text, not the actual speed
+					string str3 = string.Format((string)STRINGS.DUPLICANTS.STATUSITEMS.LABORATORYWORKEFFICIENCYBONUS.NO_BUILDING_WORK_ATTRIBUTE, (object)GameUtil.AddPositiveSign(GameUtil.GetFormattedPercent(labmodifier), true)); //this only changes the text, not the actual speed
 					return string.Format(str, (object)str3);
 				});
 			}
@@ -136,8 +141,9 @@ namespace slow_research
 						}
 					}
 				}
+				float labmodifier = 0.01f*SlowResearch.Options.LabModifier; //converting int percentage points to a float
 				if ((bool)Traverse.Create(__instance).Field("useLaboratoryEfficiencyBonus").GetValue() && (bool)Traverse.Create(__instance).Field("currentlyInLaboratory").GetValue())
-					a += 0.4f; //this is the only line that we change, changing lab bonus from +10% to +40%
+					a += labmodifier; //this is the only line that we change, changing lab bonus from +10% to value defined in mod settings
 				__result = Mathf.Max(a, (float)Traverse.Create(__instance).Field("minimumAttributeMultiplier").GetValue());
 			}
 		}
