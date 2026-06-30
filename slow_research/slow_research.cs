@@ -70,6 +70,19 @@ namespace slow_research
 			}
 		}
 
+		[HarmonyPatch(typeof(NuclearResearchCenterConfig))]
+		[HarmonyPatch("ConfigureBuildingTemplate")]
+		public class NuclearResearchCenterConfig_ConfigureBuildingTemplate_Patch //Materials science does not inherit from ResearchCenter, so we have to adjust it seperately
+		{
+			public static void Postfix(GameObject go)
+			{
+				float multiplier = SlowResearch.Options.ResearchSpeedMultiplier;
+				NuclearResearchCenter nuclearResearchCenter = go.AddOrGet<NuclearResearchCenter>();
+				nuclearResearchCenter.timePerPoint /= multiplier; //division, because our multiplier is for p/t, while this value is for t/p
+			}
+		}
+
+
 		[HarmonyPatch(typeof(Database.AttributeConverters))]
 		[HarmonyPatch(MethodType.Constructor)]
 		public class AttributeConverters_Constructor_Patch
