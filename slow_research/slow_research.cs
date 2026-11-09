@@ -38,18 +38,35 @@ namespace slow_research
 		[Option("Lab bonus","Lab room bonus to research speed in percentage (vanilla value is 10%)")]
 		[Limit(0f,100f)]
 		public int LabModifier {get; set;}
-		[Option("Research speed multiplier","Additional multiplier to research speed")]
+		[Option("Research speed multiplier","Additional multiplier to general research speed")]
 		[Limit(0.001,1)]
 		public float ResearchSpeedMultiplier {get; set;}
-		[Option("Attribute bonus","Science attribute bonus to research speed per point in percentage")]
+		[Option("Attribute bonus","Science attribute bonus to research speed per point in percentage (vanilla is 40%)")]
 		[Limit(0f,100f)]
 		public int AttributeBonus {get; set;}
+
+		[Option("Novice Research multiplier","Additional research speed multiplier for novice research","Additional Multipliers")]
+		[Limit(0.001,1)]
+		public float NoviceResearchMultiplier {get; set;}
+		[Option("Advanced Research multiplier","Additional research speed multiplier for advanced research","Additional Multipliers")]
+		[Limit(0.001,1)]
+		public float AdvancedResearchMultiplier {get; set;}
+		[Option("Materials Science Research multiplier","Additional research speed multiplier for materials research","Additional Multipliers")]
+		[Limit(0.001,1)]
+		public float MaterialResearchMultiplier {get; set;}
+		[Option("Data Analysis Research multiplier","Additional research speed multiplier for data analysis research","Additional Multipliers")]
+		[Limit(0.001,1)]
+		public float DataResearchMultiplier {get; set;}
 
 		public SlowResearchOptions(){
 			CostMultiplier=2f;
 			ResearchSpeedMultiplier=1f;
 			AttributeBonus=20;
 			LabModifier=40;
+			NoviceResearchMultiplier=1f;
+			AdvancedResearchMultiplier=1f;
+			MaterialResearchMultiplier=1f;
+			DataResearchMultiplier=1f;
 		}
 	}
 
@@ -63,7 +80,16 @@ namespace slow_research
 			{
 				float speed = 0f + __instance.GetEfficiencyMultiplier(worker); //in original code, this is for some reason 2f+multiplier
 				float multiplier = SlowResearch.Options.ResearchSpeedMultiplier;
+				float noviceMultiplier = SlowResearch.Options.NoviceResearchMultiplier;
+				float advancedMultiplier = SlowResearch.Options.AdvancedResearchMultiplier;
+				float dataMultiplier = SlowResearch.Options.DataResearchMultiplier;
 				speed *= multiplier; //additional multiplier on research speed, by default 1
+				if (__instance.research_point_type_id.Equals("basic"))
+					speed *= noviceMultiplier;
+				if (__instance.research_point_type_id.Equals("advanced"))
+					speed *= advancedMultiplier;
+				if (__instance.research_point_type_id.Equals("space")||__instance.research_point_type_id.Equals("orbital"))
+					speed *= dataMultiplier;
 				if (Game.Instance.FastWorkersModeActive)
 					speed *= 2f;
 				___elementConverter.SetWorkSpeedMultiplier(speed);
@@ -76,7 +102,7 @@ namespace slow_research
 		{
 			public static void Postfix(GameObject go)
 			{
-				float multiplier = SlowResearch.Options.ResearchSpeedMultiplier;
+				float multiplier = SlowResearch.Options.ResearchSpeedMultiplier*SlowResearch.Options.MaterialResearchMultiplier;
 				NuclearResearchCenter nuclearResearchCenter = go.AddOrGet<NuclearResearchCenter>();
 				nuclearResearchCenter.timePerPoint /= multiplier; //division, because our multiplier is for p/t, while this value is for t/p
 			}
