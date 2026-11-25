@@ -183,6 +183,7 @@ namespace slow_research
 				float labmodifier = 0.01f*SlowResearch.Options.LabModifier; //converting int percentage points to a float
 				if ((bool)Traverse.Create(__instance).Field("useLaboratoryEfficiencyBonus").GetValue() && (bool)Traverse.Create(__instance).Field("currentlyInLaboratory").GetValue())
 					a += labmodifier; //this is the only line that we change, changing lab bonus from +10% to value defined in mod settings
+				a += __instance.GetTotalEfficiencyBoost(); //this line was added in november 2026 QOL update
 				__result = Mathf.Max(a, (float)Traverse.Create(__instance).Field("minimumAttributeMultiplier").GetValue());
 			}
 		}
