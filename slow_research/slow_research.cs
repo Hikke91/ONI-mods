@@ -32,6 +32,8 @@ namespace slow_research
 	[JsonObject]
 	public class SlowResearchOptions
 	{
+		[Option("Remove hidden research boost","Whether or not to remove the hidden +200% research boost from vanilla")]
+		public bool RemoveHiddenBoost {get; set;}
 		[Option("Cost multiplier", "Multiplies the cost of all research by this much")]
 		[Limit(1,10)]
 		public float CostMultiplier {get; set;}
@@ -59,6 +61,7 @@ namespace slow_research
 		public float DataResearchMultiplier {get; set;}
 
 		public SlowResearchOptions(){
+			RemoveHiddenBoost=true;
 			CostMultiplier=2f;
 			ResearchSpeedMultiplier=1f;
 			AttributeBonus=20;
@@ -78,7 +81,10 @@ namespace slow_research
 		{
 			public static void Postfix(ResearchCenter __instance, WorkerBase worker, ElementConverter ___elementConverter)
 			{
-				float speed = 0f + __instance.GetEfficiencyMultiplier(worker); //in original code, this is for some reason 2f+multiplier
+				float speed = 2f + __instance.GetEfficiencyMultiplier(worker); //this is the original vanilla line of code
+				if (SlowResearch.Options.RemoveHiddenBoost){
+					speed = 0f + __instance.GetEfficiencyMultiplier(worker);
+					}
 				float multiplier = SlowResearch.Options.ResearchSpeedMultiplier;
 				float noviceMultiplier = SlowResearch.Options.NoviceResearchMultiplier;
 				float advancedMultiplier = SlowResearch.Options.AdvancedResearchMultiplier;
@@ -183,7 +189,7 @@ namespace slow_research
 				float labmodifier = 0.01f*SlowResearch.Options.LabModifier; //converting int percentage points to a float
 				if ((bool)Traverse.Create(__instance).Field("useLaboratoryEfficiencyBonus").GetValue() && (bool)Traverse.Create(__instance).Field("currentlyInLaboratory").GetValue())
 					a += labmodifier; //this is the only line that we change, changing lab bonus from +10% to value defined in mod settings
-				a += __instance.GetTotalEfficiencyBoost(); //this line was added in november 2026 QOL update
+				a += __instance.GetTotalEfficiencyBoost(); //this line was added in november 2026 QOL update for the new support buildings
 				__result = Mathf.Max(a, (float)Traverse.Create(__instance).Field("minimumAttributeMultiplier").GetValue());
 			}
 		}
